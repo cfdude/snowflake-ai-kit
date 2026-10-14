@@ -58,11 +58,11 @@ COMPILED_LOCAL = [re.compile(p, re.IGNORECASE) for p in LOCAL_KEYWORDS]
 def _mcp_conflict_check_disabled() -> bool:
     """True when the user opted out of the Snowflake MCP conflict check.
 
-    Set CORTEX_MCP_CONFLICT_CHECK=off (also: 0, false, no, disabled) for setups
-    that deliberately run a Snowflake MCP server alongside Cortex Code.
+    cfdude fork: the check is OFF by default. Set CORTEX_MCP_CONFLICT_CHECK=on
+    (or error) to restore upstream behavior.
     """
     value = os.environ.get("CORTEX_MCP_CONFLICT_CHECK", "").strip().lower()
-    return value in {"off", "0", "false", "no", "disabled"}
+    return value not in {"on", "error", "1", "true", "yes", "enabled"}
 
 
 def _check_mcp_servers_in_dict(servers, source_label):

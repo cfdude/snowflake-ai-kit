@@ -122,6 +122,9 @@ deliberately run one, opt out of the check:
 
 ```bash
 export CORTEX_MCP_CONFLICT_CHECK=off   # also accepts 0, false, no, disabled
+
+# cfdude fork only: the check is off by default; restore upstream behavior with
+export CORTEX_MCP_CONFLICT_CHECK=on
 ```
 
 Set it in your shell profile or the `env` block of Claude Code's `settings.json`.

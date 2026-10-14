@@ -578,6 +578,7 @@ def test_contextual_routing():
 def test_mcp_conflict_detection():
     """Verify MCP conflict detection covers all scopes and edge cases."""
     from unittest.mock import patch
+    os.environ["CORTEX_MCP_CONFLICT_CHECK"] = "on"  # fork default is off
 
     results = []
 
@@ -758,15 +759,20 @@ def test_mcp_conflict_detection():
         results.append(expect(f"mcp: opt-out '{value}' -> None (prompt_filter)", pf, None))
         _shutil.rmtree(tmp, ignore_errors=True)
 
-    # 18. Opt-out unset / unrecognised value keeps the check on
-    for value in (None, "", "on", "error"):
+    # 18. cfdude fork: check is off unless explicitly turned on
+    for value in (None, ""):
         tmp = _setup_home(settings_content=sf_settings)
-        env = {} if value is None else {"CORTEX_MCP_CONFLICT_CHECK": value}
-        with patch.dict(os.environ, env):
+        with patch.dict(os.environ, {} if value is None else {"CORTEX_MCP_CONFLICT_CHECK": value}):
             if value is None:
                 os.environ.pop("CORTEX_MCP_CONFLICT_CHECK", None)
             r = _check_with_home(tmp)
-        results.append(expect(f"mcp: opt-out value {value!r} -> conflict still reported",
+        results.append(expect(f"mcp: fork default {value!r} -> None", r, None))
+        _shutil.rmtree(tmp, ignore_errors=True)
+    for value in ("on", "error"):
+        tmp = _setup_home(settings_content=sf_settings)
+        with patch.dict(os.environ, {"CORTEX_MCP_CONFLICT_CHECK": value}):
+            r = _check_with_home(tmp)
+        results.append(expect(f"mcp: explicit {value!r} -> conflict reported",
                               r is not None and "CONFLICT" in r, True))
         _shutil.rmtree(tmp, ignore_errors=True)
 
@@ -841,6 +847,7 @@ def test_prompt_filter_mcp_hook():
     """Verify prompt_filter.main() emits STOP when MCP conflict detected."""
     import io
     from unittest.mock import patch
+    os.environ["CORTEX_MCP_CONFLICT_CHECK"] = "on"  # fork default is off
 
     results = []
 
